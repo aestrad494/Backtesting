@@ -215,11 +215,10 @@ total_0.columns = ['final profit buy', 'final profit sell',
 
 total=total_0
 
-# Backtesting Results -----------------------------
+# ------------------------------ Backtesting Results -----------------------------
 
 # Number of entry days
-entry = total['final profit buy'] + total['final profit sell']
-entry_days = (entry != 0).sum()
+entry_days = ((total['final profit buy'] + total['final profit sell']) != 0).sum()
 
 # Calculating profits in ticks and usd
 
