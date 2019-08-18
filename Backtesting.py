@@ -240,22 +240,13 @@ profit_buy_mean = round(((total['max profit buy']).loc[(total['max profit buy'])
 profit_sell_mean = round(((total['max profit sell']).loc[(total['max profit sell']) != 0]).mean(),2)
 profit_mean = (profit_buy_mean + profit_sell_mean)/2
 
-
-
-# Calculating the profit by day
+## Calculating the profit by day in USD (Table)
 total['profit usd'] = (total['final profit buy']+total['final profit sell'])*total['lots']
 
 
 # Calculate commissions
 commissions_per_trade = total['lots'].apply(calc_commission)
-
-trades_per_day = [0]*delta
-for i in range(delta):
-    entry_buys = total['final profit buy'] != 0
-    entry_sells = total['final profit sell'] != 0
-    trades_per_day[i] = entry_buys[i] * 2 + entry_sells[i] * 2
-
-
+trades_per_day = (total['final profit buy'] != 0)*2 + (total['final profit sell'] != 0)*2
 total['commissions'] = commissions_per_trade * trades_per_day
 sum_commissions = total['commissions'].sum()
 
