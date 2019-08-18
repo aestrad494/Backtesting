@@ -45,7 +45,7 @@ profit_buy_neg = 0
 profit_sell_neg = 0
 exit_buy = 0
 exit_sell = 0
-total = []
+total_0 = []
 
 # Commision Calculation
 def calc_commission(shares):
@@ -67,7 +67,7 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
 # Histoical Data to Evaluate
 historical = pd.read_csv('data/UNH_5secs.csv',parse_dates=['date'],index_col='date')#.set_index('date')
 
-# Setting the initial and final date to gaet days of evaluation
+# Setting the initial and final date to get days of evaluation
 initial_date = '2018/06/08'
 final_date = '2019/06/05'
 
@@ -76,10 +76,9 @@ print(delta)
 
 dates = [str((pd.to_datetime(initial_date) + timedelta(days=x)).strftime("%Y/%m/%d")) for x in range(delta)]
 
-
 # Main Code to calculate the backtesting results
-total = pd.DataFrame(total)
-for i in range(delta):    
+total_0 = pd.DataFrame(total_0)
+for i in range(delta):
     #Getting date
     date = dates[i]
 
@@ -195,7 +194,7 @@ for i in range(delta):
     results = pd.DataFrame(results).T.set_index(0)
 
     #Appending results
-    total = pd.concat([total,results])
+    total_0 = pd.concat([total_0,results])
 
     #restart variables in each iteration
     profit_buy_pos = profit_sell_pos = 0
@@ -209,11 +208,12 @@ for i in range(delta):
     printProgressBar(i + 1, delta   , prefix = 'Progress:', suffix = 'Complete', length = 50)
 
 # Organizing total table with columns
-total.index.names = ['date']
-total.columns = ['final profit buy', 'final profit sell', 
+total_0.index.names = ['date']
+total_0.columns = ['final profit buy', 'final profit sell', 
                  'max profit buy', 'max profit sell', 
                  'min profit buy', 'min profit sell', 'lots']
 
+total=total_0
 
 # Backtesting Results -----------------------------
 
