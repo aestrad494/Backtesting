@@ -71,17 +71,10 @@ historical = pd.read_csv('data/UNH_5secs.csv',parse_dates=['date'],index_col='da
 initial_date = '2018/06/08'
 final_date = '2019/06/05'
 
-d0 = pd.to_datetime(initial_date)
-d1 = pd.to_datetime(final_date)
-delta = d1 - d0
-delta = delta.days + 1
+delta = (pd.to_datetime(final_date) - pd.to_datetime(initial_date)).days + 1
 print(delta)
 
-dates = []
-for i in range(delta):
-    date_n = pd.to_datetime(initial_date) + timedelta(days=i)
-    date = str(date_n.strftime("%Y/%m/%d" ))
-    dates += [date]
+dates = [str((pd.to_datetime(initial_date) + timedelta(days=x)).strftime("%Y/%m/%d")) for x in range(delta)]
 
 
 # Main Code to calculate the backtesting results
