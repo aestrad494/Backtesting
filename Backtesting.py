@@ -222,34 +222,24 @@ entry_days = ((total['final profit buy'] + total['final profit sell']) != 0).sum
 
 # Calculating profits in ticks and usd
 
+## Profits in ticks
 pf_buy_ticks = round(total['final profit buy'].sum(),2)
 pf_sell_ticks = round(total['final profit sell'].sum(),2)
 total_pf_ticks = round(pf_buy_ticks + pf_sell_ticks,2)
-print('Profit Buy (ticks): ',pf_buy_ticks, ' Profit Sell (ticks): ',pf_sell_ticks, ' Total Profit(ticks): ', total_pf_ticks)
 
+## Profits in USD
 pf_buy_usd = round((total['final profit buy'] * total['lots']).sum(),2)
 pf_sell_usd = round((total['final profit sell'] * total['lots']).sum(),2)
 total_profit_usd = round(pf_buy_usd + pf_sell_usd,2)
-print('profit buy(usd): ',pf_buy_usd, 'profit sell(usd): ',pf_sell_usd, 'total profit(usd): ', total_profit_usd)
 
-
+## Per day in USD
 profit_per_day = round(total_profit_usd/entry_days,2)
-print('profit per day(usd): ', profit_per_day)
 
+## Mean Profits
+profit_buy_mean = round(((total['max profit buy']).loc[(total['max profit buy']) != 0]).mean(),2)
+profit_sell_mean = round(((total['max profit sell']).loc[(total['max profit sell']) != 0]).mean(),2)
+profit_mean = (profit_buy_mean + profit_sell_mean)/2
 
-max_profit_buy  = total['max profit buy']
-max_profit_buy = max_profit_buy.loc[(max_profit_buy != 0)]
-profit_buy_mean = round(max_profit_buy.mean(),2)
-print('profit buy mean(ticks): ', profit_buy_mean)
-
-
-max_profit_sell  = total['max profit sell']
-max_profit_sell = max_profit_sell.loc[(max_profit_sell != 0)]
-profit_sell_mean = round(max_profit_sell.mean(),2)
-print('profit sell mean(ticks): ',profit_sell_mean)
-
-
-print('profit mean (ticks): ', (profit_buy_mean + profit_sell_mean)/2)
 
 
 # Calculating the profit by day
