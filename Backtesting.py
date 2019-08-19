@@ -17,6 +17,14 @@ import math
 from datetime import timedelta
 import matplotlib.pyplot as plt
 
+# Inputs
+instrument = 'UNH'
+hora_ini = '09:30:00'
+hora_fin = '16:00:00'
+client = 100
+target = 1.27
+tempo = 5
+num_bars = 1
 
 # Definning variables
 exit_target_sell = False
@@ -27,16 +35,8 @@ exit_range_buy = False
 exit_hour_buy = False
 in_dd = False
 
-instrument = 'UNH'
-hora_ini = '09:30:00'
-hora_fin = '16:00:00'
-client = 100
-target = 1.27
-tempo = 5
-num_bars = 1
 tempo_h = 1/12
 num_bars_h = int((num_bars*tempo)/tempo_h)
-
 account = 20000
 risk = 0.01
 profit_buy_pos = 0
@@ -306,38 +306,28 @@ total_losses = results_long[results_long < 0].sum() + results_short[results_shor
 
 # Expected Payoff
 expected_payoff = (total_profit_usd - sum_commissions) / total_trades
-print('Expected Payoff: ', round(expected_payoff,2))
 
 
 # Greater profitable transaction 
 max_profit_long = results_long[results_long > 0].max()
 max_profit_short = results_short[results_short > 0].max()
 max_profit = max(max_profit_long, max_profit_short)
-print('Greater Profitable transaction: ' , round(max_profit,2))
 
 # Greater non profitable transaction
 max_loss_long = results_long[results_long < 0].min()
 max_loss_short = results_short[results_short < 0].min()
 max_loss = min(max_loss_long, max_loss_short)
-print('Greater non Profitable transaction: ' , round(max_loss,2))
 
 # Average profitable transaction
-profit_list = pd.concat([results_long[results_long > 0],results_short[results_short > 0]])
-ave_profit = profit_list.mean()
-print('Average profitable transaction: ', round(ave_profit,2))
-
+ave_profit = pd.concat([results_long[results_long > 0],results_short[results_short > 0]]).mean()
 
 # Average non profitable transaction
-loss_list = pd.concat([results_long[results_long < 0],results_short[results_short < 0]])
-ave_loss = loss_list.mean()
-print('Average non profitable transaction: ', round(ave_loss,2))
+ave_loss = pd.concat([results_long[results_long < 0],results_short[results_short < 0]]).mean()
 
 # Profit Factor
 profit_factor = abs(total_profits/total_losses)
-print('Profit Factor: ', round(profit_factor,2))
 
 # Maximum number of Drawdown days
-
 ## Finding dates where there was DD
 dates_dd = []
 for i in range(delta):
@@ -359,7 +349,6 @@ for i in range(delta):
                 in_dd = False
 
 len_dates_dd = len(dates_dd)
-
 if len_dates_dd % 2 == 0:
     dates_dd 
 else:
@@ -372,9 +361,6 @@ for i in range(0,len(dates_dd),2):
     date_f = dates_dd[i+1]
     date_if = [date_i,date_f]
     dates_if.append(date_if)
-
-
-#total[['accumulated profit','max profit']].plot(figsize=(20, 10))
 
 
 ## Getting the number of days in DD
@@ -392,7 +378,6 @@ for i in range(0,len_dates,2):
 max_dd_days = max(delta_dates)
 ind_max_dd_days = delta_dates.index(max_dd_days)
 dates_max_dd = dates_if[ind_max_dd_days]
-print('Max. number of days in DD: ', max_dd_days, ', between days: ', dates_max_dd)
 
 # Final Metrics Resume
 final_metrics = {}
@@ -411,11 +396,9 @@ final_metrics = {'Initial Account (usd)': account, 'Total profit (usd)': total_p
 final_metrics = pd.DataFrame(final_metrics, index = [0]).T
 final_metrics.index.names = ['Metric']
 final_metrics.columns = ['Values']
-final_metrics
-
 
 # Exporting Final Metrics to Excel
-final_metrics.to_excel('UNH_5Min.xlsx')
+final_metrics.to_excel(instrument+'_'+str(tempo)+'Min.xlsx')
 
 # Exporting Total table to Excel
-total.to_excel('total_UNH_5Min.xlsx')
+total.to_excel('total_'+instrument+'_'+str(tempo)+'Min.xlsx')
