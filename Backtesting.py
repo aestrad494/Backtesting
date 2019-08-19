@@ -221,16 +221,11 @@ total=total_0
 entry_days = ((total['final profit buy'] + total['final profit sell']) != 0).sum()
 
 # Calculating profits in ticks and usd
-
-## Profits in ticks
-pf_buy_ticks = round(total['final profit buy'].sum(),2)
-pf_sell_ticks = round(total['final profit sell'].sum(),2)
-total_pf_ticks = round(pf_buy_ticks + pf_sell_ticks,2)
+## Profit by day
+total['profit usd'] = (total['final profit buy'] + total['final profit sell']) * total['lots']
 
 ## Profits in USD
-pf_buy_usd = round((total['final profit buy'] * total['lots']).sum(),2)
-pf_sell_usd = round((total['final profit sell'] * total['lots']).sum(),2)
-total_profit_usd = round(pf_buy_usd + pf_sell_usd,2)
+total_profit_usd = round((total['profit usd']).sum(),2)
 
 ## Per day in USD
 profit_per_day = round(total_profit_usd/entry_days,2)
@@ -239,10 +234,6 @@ profit_per_day = round(total_profit_usd/entry_days,2)
 profit_buy_mean = round(((total['max profit buy']).loc[(total['max profit buy']) != 0]).mean(),2)
 profit_sell_mean = round(((total['max profit sell']).loc[(total['max profit sell']) != 0]).mean(),2)
 profit_mean = (profit_buy_mean + profit_sell_mean)/2
-
-## Calculating the profit by day in USD (Table)
-total['profit usd'] = (total['final profit buy']+total['final profit sell'])*total['lots']
-
 
 # Calculate commissions
 commissions_per_trade = total['lots'].apply(calc_commission)
@@ -254,31 +245,16 @@ sum_commissions = total['commissions'].sum()
 total['net profit'] = total['profit usd'] - total['commissions']
 
 # Acumulated Profit
-total['accumulated profit'] = 0
-ind_net = total.columns.get_loc("net profit")
-ind_acc = total.columns.get_loc("accumulated profit")
+total['accumulated profit'] = total['profit usd'].cumsum() + account
+total['max profit'] = total['accumulated profit'].cummax()
 
-for j in range(delta):
-    if (j == 0):
-        total.iloc[j,ind_acc] = account + total.iloc[j,ind_net]
-    if (j > 0):
-        total.iloc[j,ind_acc] = total.iloc[j-1,ind_acc] + total.iloc[j,ind_net]
-
-
-total['max profit'] = 0
-ind_max = total.columns.get_loc("max profit")
-
-for i in range(delta):
-    if (i == 0):
-        total.iloc[i,ind_max] = total.iloc[i,ind_acc]
-    if (i > 0):
-        if (total.iloc[i,ind_acc] > total.iloc[i-1,ind_max]):
-            total.iloc[i,ind_max] = total.iloc[i,ind_acc]
-        else:
-            total.iloc[i,ind_max] = total.iloc[i-1,ind_max]
-
-#total[['accumulated profit','max profit']].plot(figsize=(20, 10))
-
+'''total['accumulated profit'].plot(figsize=(18,10),label='accumulated',color='black',lw=2)
+total['max profit'].plot(color='red',label='max',ls='-',alpha=0.7)
+plt.xlabel('Date')
+plt.ylabel('Profit')
+plt.title('Results UNH 5 Min')
+plt.legend()
+plt.savefig('unh_5Min.png')'''
 
 # Maximal Drawdown
 drawdown = total['max profit'] - total['accumulated profit']
