@@ -248,14 +248,6 @@ total['net profit'] = total['profit usd'] - total['commissions']
 total['accumulated profit'] = total['profit usd'].cumsum() + account
 total['max profit'] = total['accumulated profit'].cummax()
 
-'''total['accumulated profit'].plot(figsize=(18,10),label='accumulated',color='black',lw=2)
-total['max profit'].plot(color='red',label='max',ls='-',alpha=0.7)
-plt.xlabel('Date')
-plt.ylabel('Profit')
-plt.title('Results UNH 5 Min')
-plt.legend()
-plt.savefig('unh_5Min.png')'''
-
 # Maximal Drawdown
 drawdown = total['max profit'] - total['accumulated profit']
 max_drawdown = drawdown.max()
@@ -402,3 +394,11 @@ final_metrics.to_excel(instrument+'_'+str(tempo)+'Min.xlsx')
 
 # Exporting Total table to Excel
 total.to_excel('total_'+instrument+'_'+str(tempo)+'Min.xlsx')
+
+total['accumulated profit'].plot(figsize=(18,10),label='accumulated',color='black',lw=2)
+total['max profit'].plot(color='red',label='max',ls='-',alpha=0.7)
+plt.xlabel('Date')
+plt.ylabel('Profit')
+plt.title('Results '+instrument+' '+str(tempo)+' Min')
+plt.legend()
+plt.savefig(instrument+'_'+str(tempo)+'Min.png')
