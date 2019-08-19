@@ -9,10 +9,7 @@ import numpy as np
 import datetime
 import calendar
 import time
-from IPython.display import clear_output
-from nested_lookup import nested_lookup
 import pytz
-import smtplib
 import math
 from datetime import timedelta
 import matplotlib.pyplot as plt
@@ -213,7 +210,7 @@ total_0.columns = ['final profit buy', 'final profit sell',
                  'max profit buy', 'max profit sell', 
                  'min profit buy', 'min profit sell', 'lots']
 
-total=total_0
+total = total_0
 
 # ------------------------------ Backtesting Results -----------------------------
 
@@ -265,7 +262,6 @@ else:
 draw_index = list(drawdown).index(max_drawdown)
 max_draw_date = dates[draw_index]
 
-
 # Percent Profitable
 ## In long
 number_longs = (total['final profit buy'] != 0).sum()
@@ -295,10 +291,8 @@ total_profits = results_long[results_long > 0].sum() + results_short[results_sho
 # Gross Loss
 total_losses = results_long[results_long < 0].sum() + results_short[results_short < 0].sum()
 
-
 # Expected Payoff
 expected_payoff = (total_profit_usd - sum_commissions) / total_trades
-
 
 # Greater profitable transaction 
 max_profit_long = results_long[results_long > 0].max()
@@ -395,6 +389,7 @@ final_metrics.to_excel(instrument+'_'+str(tempo)+'Min.xlsx')
 # Exporting Total table to Excel
 total.to_excel('total_'+instrument+'_'+str(tempo)+'Min.xlsx')
 
+# Plotting and saving 
 total['accumulated profit'].plot(figsize=(18,10),label='accumulated',color='black',lw=2)
 total['max profit'].plot(color='red',label='max',ls='-',alpha=0.7)
 plt.xlabel('Date')
