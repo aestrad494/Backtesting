@@ -293,33 +293,16 @@ total_positive = number_pos_longs + number_pos_shorts
 total_negative = number_neg_longs + number_neg_shorts
 percent_total = total_positive/total_trades
 
+# Results
+results_long = total['final profit buy']*total['lots']
+results_short = total['final profit sell']*total['lots']
 
 # Gross Profit
-## Longs
-results_long = total['final profit buy']*total['lots']
-profit_long = results_long[results_long > 0].sum()
-
-## Shorts
-results_short = total['final profit sell']*total['lots']
-profits_short = results_short[results_short > 0].sum()
-
-## Total
-total_profits = profit_long + profits_short
-print('Gross Profit(usd): ', round(total_profits,2))
-
+total_profits = results_long[results_long > 0].sum() + results_short[results_short > 0].sum()
 
 # Gross Loss
+total_losses = results_long[results_long < 0].sum() + results_short[results_short < 0].sum()
 
-## Longs
-losses_long = results_long[results_long < 0].sum()
-
-
-## Shorts
-losses_short = results_short[results_short < 0].sum()
-
-## Total
-total_losses = losses_long + losses_short
-print('Gross Loss(usd): ', round(total_losses,2))
 
 # Expected Payoff
 expected_payoff = (total_profit_usd - sum_commissions) / total_trades
