@@ -259,55 +259,42 @@ plt.savefig('unh_5Min.png')'''
 # Maximal Drawdown
 drawdown = total['max profit'] - total['accumulated profit']
 max_drawdown = drawdown.max()
-print('maximal drawdown(usd): ', round(max_drawdown,2))
-
 
 # Relative Drawdown
 relative_drawdown = max_drawdown/account
-print('Relative drawdown: ', round(relative_drawdown*100,2),'%')
 
 # Absolute Drawdown
 if (total['accumulated profit'].min() < account):
     absolute_drawdown = account - total['accumulated profit'].min()
 else:
     absolute_drawdown = 0
-print('Absolute Drawdown(usd):', round(absolute_drawdown,2))
 
 # Date of maximal drawdown
 draw_index = list(drawdown).index(max_drawdown)
 max_draw_date = dates[draw_index]
-print('The maximal drawdown was in ', max_draw_date)
+
 
 # Percent Profitable
-
 ## In long
-longs = total['final profit buy'] != 0
-number_longs = longs.sum()
-pos_longs = total['final profit buy'] > 0
-number_pos_longs = pos_longs.sum()
+number_longs = (total['final profit buy'] != 0).sum()
+number_pos_longs = (total['final profit buy'] > 0).sum()
+number_neg_longs = number_longs - number_pos_longs
 percent_longs = number_pos_longs/number_longs
-print('total buy trades: ', number_longs, ' positive longs: ',number_pos_longs,  ' negative longs: ',number_longs - number_pos_longs,
-      '\nPercent profitable longs: ', round(percent_longs*100,2),'%')
 
 ## in short
-shorts = total['final profit sell'] != 0
-number_shorts = shorts.sum()
-pos_shorts = total['final profit sell'] > 0
-number_pos_shorts = pos_shorts.sum()
+number_shorts = (total['final profit sell'] != 0).sum()
+number_pos_shorts = (total['final profit sell'] > 0).sum()
+number_neg_shorts = number_shorts - number_pos_shorts
 percent_shorts = number_pos_shorts/number_shorts
-print('total sell trades: ', number_shorts, ' positive shorts: ',number_pos_shorts, ' negative shorts: ',number_shorts - number_pos_shorts,
-      '\nPercent profitable shorts: ', round(percent_shorts*100,2),'%')
-
 
 ## total
 total_trades = number_longs + number_shorts
 total_positive = number_pos_longs + number_pos_shorts
+total_negative = number_neg_longs + number_neg_shorts
 percent_total = total_positive/total_trades
-print('total trades: ', total_trades, ' positive trades: ',total_positive, ' negative trades: ', total_trades - total_positive,
-      '\nTotal Percent profitable: ', round(percent_total*100,2),'%')
+
 
 # Gross Profit
-
 ## Longs
 results_long = total['final profit buy']*total['lots']
 profit_long = results_long[results_long > 0].sum()
