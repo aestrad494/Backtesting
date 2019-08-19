@@ -62,14 +62,13 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
         print()
 
 # Histoical Data to Evaluate
-historical = pd.read_csv('data/UNH_5secs.csv',parse_dates=['date'],index_col='date')#.set_index('date')
+historical = pd.read_csv('UNH_5secs.csv',parse_dates=['date'],index_col='date')#.set_index('date')
 
 # Setting the initial and final date to get days of evaluation
 initial_date = '2018/06/08'
 final_date = '2019/06/05'
 
 delta = (pd.to_datetime(final_date) - pd.to_datetime(initial_date)).days + 1
-print(delta)
 
 dates = [str((pd.to_datetime(initial_date) + timedelta(days=x)).strftime("%Y/%m/%d")) for x in range(delta)]
 
@@ -384,10 +383,10 @@ final_metrics.index.names = ['Metric']
 final_metrics.columns = ['Values']
 
 # Exporting Final Metrics to Excel
-final_metrics.to_excel(instrument+'_'+str(tempo)+'Min.xlsx')
+final_metrics.to_csv(instrument+'_'+str(tempo)+'Min.xlsx')
 
 # Exporting Total table to Excel
-total.to_excel('total_'+instrument+'_'+str(tempo)+'Min.xlsx')
+total.to_csv('total_'+instrument+'_'+str(tempo)+'Min.xlsx')
 
 # Plotting and saving 
 total['accumulated profit'].plot(figsize=(18,10),label='accumulated',color='black',lw=2)
