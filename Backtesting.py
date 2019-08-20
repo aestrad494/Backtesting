@@ -6,13 +6,10 @@
 # Importing Packages
 import pandas as pd
 import numpy as np
-import datetime
-import calendar
-import time
-import pytz
-import math
+from math import floor
 from datetime import timedelta
 import matplotlib.pyplot as plt
+from Backtesting_Class import Backtesting_Strategy
 
 # Inputs
 instrument = 'UNH'
@@ -30,7 +27,6 @@ exit_hour_sell = False
 exit_target_buy = False
 exit_range_buy = False
 exit_hour_buy = False
-in_dd = False
 
 tempo_h = 1/12
 num_bars_h = int((num_bars*tempo)/tempo_h)
@@ -44,13 +40,6 @@ exit_buy = 0
 exit_sell = 0
 total_0 = []
 
-# Commision Calculation
-def calc_commission(shares):
-    commission = shares * 0.005
-    if (commission < 1):
-        commission = 1
-    return(commission)
-
 # Progress Bar
 def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '#'):
     percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
@@ -62,12 +51,11 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
         print()
 
 # Histoical Data to Evaluate
-historical = pd.read_csv('UNH_5secs.csv',parse_dates=['date'],index_col='date')#.set_index('date')
+historical = pd.read_csv('UNH_5secs.csv',parse_dates=['date'],index_col='date')
 
 # Setting the initial and final date to get days of evaluation
 initial_date = '2018/06/08'
 final_date = '2019/06/05'
-
 delta = (pd.to_datetime(final_date) - pd.to_datetime(initial_date)).days + 1
 
 dates = [str((pd.to_datetime(initial_date) + timedelta(days=x)).strftime("%Y/%m/%d")) for x in range(delta)]
@@ -87,7 +75,7 @@ for i in range(delta):
         minimum = hist.low.rolling(num_bars_h).min()[num_bars_h-1]
         range_tam = round(maximum - minimum,2)
         target = 1.27
-        lots = math.floor((account*risk)/(maximum-minimum)) 
+        lots = floor((account*risk)/(maximum-minimum)) 
     else:
         maximum = minimum = 0
         range_tam = target = lots = 0
@@ -211,184 +199,101 @@ total_0.columns = ['final profit buy', 'final profit sell',
 
 total = total_0
 
-# ------------------------------ Backtesting Results -----------------------------
-
-# Number of entry days
-entry_days = ((total['final profit buy'] + total['final profit sell']) != 0).sum()
-
-# Calculating profits in ticks and usd
-## Profit by day
+# Profit by day
 total['profit usd'] = (total['final profit buy'] + total['final profit sell']) * total['lots']
 
-## Profits in USD
-total_profit_usd = round((total['profit usd']).sum(),2)
+# Accumulated Profit
+total['accumulated profit'] = total['profit usd'].cumsum() + account
+total['max profit'] = total['accumulated profit'].cummax()
 
-## Per day in USD
-profit_per_day = round(total_profit_usd/entry_days,2)
+# Instantiating Backtesting Class
+back = Backtesting_Strategy(total)
 
-## Mean Profits
+# ------------------------------ Backtesting Results -----------------------------
+# 1. Total Profit (USD)
+total_profit_usd = back.final_profit_usd()
+
+# Profit in ticks (mean)
 profit_buy_mean = round(((total['max profit buy']).loc[(total['max profit buy']) != 0]).mean(),2)
 profit_sell_mean = round(((total['max profit sell']).loc[(total['max profit sell']) != 0]).mean(),2)
 profit_mean = (profit_buy_mean + profit_sell_mean)/2
 
-# Calculate commissions
-commissions_per_trade = total['lots'].apply(calc_commission)
-trades_per_day = (total['final profit buy'] != 0)*2 + (total['final profit sell'] != 0)*2
-total['commissions'] = commissions_per_trade * trades_per_day
-sum_commissions = total['commissions'].sum()
+# 2. Total Commissions (USD)
+total_commissions = back.total_commissions()
 
-# Net profit
-total['net profit'] = total['profit usd'] - total['commissions']
+# 3. Net Profit (USD)
+net_profit = total_profit_usd - total_commissions
 
-# Acumulated Profit
-total['accumulated profit'] = total['profit usd'].cumsum() + account
-total['max profit'] = total['accumulated profit'].cummax()
+# 4. Gross Profit and Loss (USD)
+gross_profit, gross_loss = back.gross_profit_and_loss()
 
-# Maximal Drawdown
-drawdown = total['max profit'] - total['accumulated profit']
-max_drawdown = drawdown.max()
+# 5. Profit Factor
+profit_factor = round(abs(gross_profit/gross_loss),2)
 
-# Relative Drawdown
+# 6. Maximal Drawdown (Value and date)
+max_drawdown, max_draw_date = back.max_drawdown()
+
+# 7. Relative Drawdown
 relative_drawdown = max_drawdown/account
 
-# Absolute Drawdown
-if (total['accumulated profit'].min() < account):
-    absolute_drawdown = account - total['accumulated profit'].min()
-else:
-    absolute_drawdown = 0
+# 8. Absolute Drawdown
+absolute_drawdown = back.absolute_drawdown(account)
 
-# Date of maximal drawdown
-draw_index = list(drawdown).index(max_drawdown)
-max_draw_date = dates[draw_index]
+# 9. Maximal Drawdown Period and date
+max_dd_days, dates_max_dd = back.max_drawdown_date(account)
 
-# Percent Profitable
-## In long
-number_longs = (total['final profit buy'] != 0).sum()
-number_pos_longs = (total['final profit buy'] > 0).sum()
-number_neg_longs = number_longs - number_pos_longs
-percent_longs = number_pos_longs/number_longs
+# 10. Trades Info
+## 10.1. Total Transactions
+total_trades, total_positive, total_negative, percent_total = back.transactions_info('total')
 
-## in short
-number_shorts = (total['final profit sell'] != 0).sum()
-number_pos_shorts = (total['final profit sell'] > 0).sum()
-number_neg_shorts = number_shorts - number_pos_shorts
-percent_shorts = number_pos_shorts/number_shorts
+## 10.2. Short Transactions
+short_trades, positive_shorts, negative_shorts, percent_shorts = back.transactions_info('shorts')
 
-## total
-total_trades = number_longs + number_shorts
-total_positive = number_pos_longs + number_pos_shorts
-total_negative = number_neg_longs + number_neg_shorts
-percent_total = total_positive/total_trades
+## 10.3. Long Transactions
+long_trades, positive_longs, negative_longs, percent_longs = back.transactions_info('longs')
 
-# Results
-results_long = total['final profit buy']*total['lots']
-results_short = total['final profit sell']*total['lots']
+# 11. Expected Payoff
+expected_payoff = round((total_profit_usd - total_commissions) / total_trades,2)
 
-# Gross Profit
-total_profits = results_long[results_long > 0].sum() + results_short[results_short > 0].sum()
+# 12. Greater Transactions
+## 12.1. Profitable
+greater_prof = back.greater_transactions('profitable')
 
-# Gross Loss
-total_losses = results_long[results_long < 0].sum() + results_short[results_short < 0].sum()
+## 12.2. Non Profitable
+greater_non_prof = back.greater_transactions('non profitable')
 
-# Expected Payoff
-expected_payoff = (total_profit_usd - sum_commissions) / total_trades
+# 13. Average Transactions
+## 13.1. Profitable
+average_prof = back.average_transaction('profitable')
 
-# Greater profitable transaction 
-max_profit_long = results_long[results_long > 0].max()
-max_profit_short = results_short[results_short > 0].max()
-max_profit = max(max_profit_long, max_profit_short)
+## 13.2. Non Profitable
+average_non_prof = back.average_transaction('non profitable')
 
-# Greater non profitable transaction
-max_loss_long = results_long[results_long < 0].min()
-max_loss_short = results_short[results_short < 0].min()
-max_loss = min(max_loss_long, max_loss_short)
-
-# Average profitable transaction
-ave_profit = pd.concat([results_long[results_long > 0],results_short[results_short > 0]]).mean()
-
-# Average non profitable transaction
-ave_loss = pd.concat([results_long[results_long < 0],results_short[results_short < 0]]).mean()
-
-# Profit Factor
-profit_factor = abs(total_profits/total_losses)
-
-# Maximum number of Drawdown days
-## Finding dates where there was DD
-dates_dd = []
-for i in range(delta):
-    if (i < 1):
-        if(total.iloc[i,10] < account):
-            date_dd = total.index[i]
-            dates_dd.append(date_dd)
-            in_dd = True
-    if (i >= 1):
-        if (in_dd == False):
-            if(total.iloc[i,10] < total.iloc[i-1,11]):
-                date_dd = total.index[i-1]
-                dates_dd.append(date_dd)
-                in_dd = True
-        if (in_dd == True):
-            if(total.iloc[i,10] > total.iloc[i-1,11]):
-                date_dd = total.index[i]
-                dates_dd.append(date_dd)
-                in_dd = False
-
-len_dates_dd = len(dates_dd)
-if len_dates_dd % 2 == 0:
-    dates_dd 
-else:
-    dates_dd.append(total.index[-1])
-
-## Organizing dates of DD in pairs
-dates_if = []
-for i in range(0,len(dates_dd),2):
-    date_i = dates_dd[i]
-    date_f = dates_dd[i+1]
-    date_if = [date_i,date_f]
-    dates_if.append(date_if)
-
-
-## Getting the number of days in DD
-len_dates = len(dates_dd)
-delta_dates = []
-for i in range(0,len_dates,2):
-    date_1 = pd.to_datetime(dates_dd[i])
-    date_2 = pd.to_datetime(dates_dd[i+1])
-    
-    delta_date = date_2 - date_1
-    delta_date = delta_date.days + 1
-    delta_dates.append(delta_date)
-
-## Getting the max. number of days in DD
-max_dd_days = max(delta_dates)
-ind_max_dd_days = delta_dates.index(max_dd_days)
-dates_max_dd = dates_if[ind_max_dd_days]
-
-# Final Metrics Resume
+# Final Metrics
 final_metrics = {}
-final_metrics = {'Initial Account (usd)': account, 'Total profit (usd)': total_profit_usd, 'Total Commissions (usd)': sum_commissions, 'Net Profit (usd)': total_profit_usd - sum_commissions,
-                'Gross Profit (usd)': round(total_profits,2), 'Gross Loss (usd)': round(total_losses,2), 'Profit Factor': round(profit_factor,2), 'Expected Payoff (usd)': round(expected_payoff,2),
-                'Absolute Drawdown (usd)': round(absolute_drawdown,2), 'Maximal Drawdown (usd)': round(max_drawdown,2), 'Relative Drawdown (%)': round(relative_drawdown*100,2),
-                'Maximal Drawdown Date': max_draw_date, 'Maximal period in Drawdown (days)': max_dd_days, 'Dates of max. DD period': str(dates_max_dd), 
-                'Total Transactions': total_trades, 'Short Positions': number_shorts, 
-                'Winning Shorts': number_pos_shorts, 'Winning Shorts (%)': round(percent_shorts*100,2),
-                'Long Positions': number_longs, 'Winning Longs': number_pos_longs, 'Winning Longs (%)': round(percent_longs*100,2),
-                'Winning Trades': total_positive, 'Winning Trades (%)': round(percent_total*100,2),
-                'Losing Trades': total_trades - total_positive, 'Losing Trades (%)': round(100-(percent_total*100),2),
-                'Greater Profitable Transaction (usd)': max_profit, 'Greater non Profitable Transaction (usd)': max_loss,
-                'Profitable Transaction Average (usd)': round(ave_profit,2), 'Non Profitable Transaction Average (usd)': round(ave_loss,2)}
+final_metrics = {'Initial Account (usd)': account, 'Total profit (usd)': total_profit_usd, 'Total Commissions (usd)': total_commissions, 
+                 'Net Profit (usd)': net_profit, 'Gross Profit (usd)': gross_profit, 'Gross Loss (usd)': gross_loss, 
+                 'Profit Factor': profit_factor, 'Maximal Drawdown (usd)': max_drawdown, 'Maximal Drawdown Date': max_draw_date,
+                 'Relative Drawdown (%)': round(relative_drawdown*100,2), 'Absolute Drawdown (usd)': absolute_drawdown,  
+                 'Maximal period in Drawdown (days)': max_dd_days, 'Dates of max. DD period': str(dates_max_dd), 
+                 'Total Transactions': total_trades, 'Winning Trades': total_positive, 'Winning Trades (%)': round(percent_total*100,2),
+                 'Losing Trades': total_negative, 'Losing Trades (%)': round(100-(percent_total*100),2),
+                 'Short Positions': short_trades, 'Winning Shorts': positive_shorts, 'Winning Shorts (%)': round(percent_shorts*100,2),
+                 'Losing Shorts': negative_shorts, 'Losing Shorts(%)': round(100-(percent_shorts*100),2),
+                 'Long Positions': long_trades, 'Winning Longs': positive_longs, 'Winning Longs (%)': round(percent_longs*100,2),
+                 'Losing Longs:': negative_longs, 'Losing Longs(%)': round(100-(percent_longs*100),2),
+                 'Expected Payoff (usd)': expected_payoff,
+                 'Greater Profitable Transaction (usd)': greater_prof, 'Greater non Profitable Transaction (usd)': greater_non_prof,
+                 'Profitable Transaction Average (usd)': average_prof, 'Non Profitable Transaction Average (usd)': average_non_prof}
 
 final_metrics = pd.DataFrame(final_metrics, index = [0]).T
 final_metrics.index.names = ['Metric']
 final_metrics.columns = ['Values']
 
-# Exporting Final Metrics to Excel
-final_metrics.to_csv(instrument+'_'+str(tempo)+'Min.xlsx')
+# Saving Results
+final_metrics.to_csv(instrument+'_'+str(tempo)+'Min.csv')
+total.to_csv('total_'+instrument+'_'+str(tempo)+'Min.csv')
 
-# Exporting Total table to Excel
-total.to_csv('total_'+instrument+'_'+str(tempo)+'Min.xlsx')
-
-# Plotting and saving 
 total['accumulated profit'].plot(figsize=(18,10),label='accumulated',color='black',lw=2)
 total['max profit'].plot(color='red',label='max',ls='-',alpha=0.7)
 plt.xlabel('Date')
