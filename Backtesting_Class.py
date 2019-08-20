@@ -22,6 +22,7 @@ class Backtesting_Strategy():
         return(round(total_commissions,2))
     
     def gross_profit_and_loss(self):
+        global results_long, results_short
         results_long = self.df['final profit buy'] * self.df['lots']
         results_short = self.df['final profit sell'] * self.df['lots']
         total_profits = round(results_long[results_long > 0].sum() + results_short[results_short > 0].sum(),2)
@@ -113,7 +114,6 @@ class Backtesting_Strategy():
         return([total_trades, number_pos, number_neg, percent_pos])
     
     def greater_transactions(self,type_info):
-        results
         if type_info == 'profitable':
             max_long = results_long[results_long > 0].max()
             max_short = results_short[results_short > 0].max()
@@ -122,6 +122,14 @@ class Backtesting_Strategy():
             max_loss_long = results_long[results_long < 0].min()
             max_loss_short = results_short[results_short < 0].min()
             maximum = min(max_loss_long, max_loss_short)
+        return(round(maximum,2))
+    
+    def average_transaction(self,type_info):
+        if type_info == 'profitable':
+            average = pd.concat([results_long[results_long > 0],results_short[results_short > 0]]).mean()
+        elif type_info == 'non profitable':
+            average = pd.concat([results_long[results_long < 0],results_short[results_short < 0]]).mean()
+        return(round(average,2))
     
     
         
