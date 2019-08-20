@@ -93,6 +93,38 @@ class Backtesting_Strategy():
         dates_max_dd = dates_if[ind_max_dd_days]
         
         return([max_dd_days, dates_max_dd])
+    
+    def transactions_info(self, type_info):
+        if (type_info == 'shorts'):
+            total_trades = (self.df['final profit sell'] != 0).sum()
+            number_pos = (self.df['final profit sell'] > 0).sum()
+            number_neg = total_trades - number_pos
+            percent_pos = number_pos/total_trades
+        elif (type_info == 'longs'):
+            total_trades = (self.df['final profit buy'] != 0).sum()
+            number_pos = (self.df['final profit buy'] > 0).sum()
+            number_neg = total_trades - number_pos
+            percent_pos = number_pos/total_trades
+        elif (type_info == 'total'):
+            total_trades = (self.df['final profit buy'] != 0).sum() + (self.df['final profit sell'] != 0).sum()
+            number_pos = (self.df['final profit buy'] > 0).sum() + (self.df['final profit sell'] > 0).sum()
+            number_neg = total_trades - number_pos
+            percent_pos = number_pos/total_trades
+        return([total_trades, number_pos, number_neg, percent_pos])
+    
+    def greater_transactions(self,type_info):
+        results
+        if type_info == 'profitable':
+            max_long = results_long[results_long > 0].max()
+            max_short = results_short[results_short > 0].max()
+            maximum = max(max_long, max_short)
+        elif type_info == 'non profitable':
+            max_loss_long = results_long[results_long < 0].min()
+            max_loss_short = results_short[results_short < 0].min()
+            maximum = min(max_loss_long, max_loss_short)
+    
+    
+        
         
         
         
