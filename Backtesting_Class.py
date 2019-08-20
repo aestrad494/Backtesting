@@ -50,43 +50,30 @@ class Backtesting_Strategy():
         for i in range(delta):
             if (i < 1):
                 if(self.df['accumulated profit'][i] < account):
-                    date_dd = self.df.index[i]
-                    dates_dd.append(date_dd)
+                    dates_dd.append(self.df.index[i])
                     in_dd = True
             if (i >= 1):
                 if (in_dd == False):
                     if(self.df['accumulated profit'][i] < self.df['max profit'][i-1]):
-                        date_dd = self.df.index[i-1]
-                        dates_dd.append(date_dd)
+                        dates_dd.append(self.df.index[i-1])
                         in_dd = True
                 if (in_dd == True):
                     if(self.df['accumulated profit'][i] > self.df['max profit'][i-1]):
-                        date_dd = self.df.index[i]
-                        dates_dd.append(date_dd)
+                        dates_dd.append(self.df.index[i])
                         in_dd = False
 
-        len_dates_dd = len(dates_dd)
-
-        if len_dates_dd % 2 == 0:
+        if len(dates_dd) % 2 == 0:
             dates_dd 
         else:
             dates_dd.append(self.df.index[-1])
         
-        dates_if = []
+        dates_if =[]
         for i in range(0,len(dates_dd),2):
-            date_i = dates_dd[i]
-            date_f = dates_dd[i+1]
-            date_if = [date_i,date_f]
-            dates_if.append(date_if)
+            dates_if.append([dates_dd[i],dates_dd[i+1]])
             
-        len_dates = len(dates_dd)
         delta_dates = []
-        for i in range(0,len_dates,2):
-            date_1 = pd.to_datetime(dates_dd[i])
-            date_2 = pd.to_datetime(dates_dd[i+1])
-
-            delta_date = date_2 - date_1
-            delta_date = delta_date.days + 1
+        for i in range(0,len(dates_dd),2):
+            delta_date = (pd.to_datetime(dates_dd[i+1]) - pd.to_datetime(dates_dd[i])).days + 1
             delta_dates.append(delta_date)
             
         max_dd_days = max(delta_dates)
@@ -130,28 +117,3 @@ class Backtesting_Strategy():
         elif type_info == 'non profitable':
             average = pd.concat([results_long[results_long < 0],results_short[results_short < 0]]).mean()
         return(round(average,2))
-    
-    
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
