@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
+import time
 
+start = time.time()
 # Backtesting 
 
 # Importing Packages
@@ -12,10 +14,9 @@ import matplotlib.pyplot as plt
 from Backtesting_Class import Backtesting_Strategy
 
 # Inputs
-instrument = 'UNH'
+instrument = 'AAPL'
 hora_ini = '09:30:00'
 hora_fin = '16:00:00'
-client = 100
 target = 1.27
 tempo = 5
 num_bars = 1
@@ -51,10 +52,10 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
         print()
 
 # Histoical Data to Evaluate
-historical = pd.read_csv('UNH_5secs.csv',parse_dates=['date'],index_col='date')
+historical = pd.read_csv('AAPL_5secs.csv',parse_dates=['date'],index_col='date')
 
 # Setting the initial and final date to get days of evaluation
-initial_date = '2018/06/08'
+initial_date = '2018/06/09'
 final_date = '2019/06/05'
 delta = (pd.to_datetime(final_date) - pd.to_datetime(initial_date)).days + 1
 
@@ -301,3 +302,6 @@ plt.ylabel('Profit')
 plt.title('Results '+instrument+' '+str(tempo)+' Min')
 plt.legend()
 plt.savefig(instrument+'_'+str(tempo)+'Min.png')
+
+end = time.time()
+print(end - start, ' secs')
